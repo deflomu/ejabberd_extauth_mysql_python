@@ -7,6 +7,10 @@
 #Author: iltl. Contact: iltl@free.fr
 #Version: 27 July 2009
 
+#modifications by elm:
+# - use sha512 instead of md5
+# - allow password changes
+
 ########################################################################
 #DB Settings
 #Just put your settings here.
@@ -90,12 +94,24 @@ def auth(in_user, in_host, password):
 		out=False
 		logging.debug("Wrong username: %s"%(in_user))
 	if in_user+"@"+in_host==data[0]+domain_suffix:
-		if hashlib.md5(password).hexdigest()==data[1]:
+		if hashlib.sha512(password).hexdigest()==data[1]:
 			out=True
 		else:
 			logging.debug("Wrong password for user: %s"%(in_user))
 			out=False
 	else:
+		out=False
+	return out
+def setpass(in_user, in_host, password):
+	out=False
+	new_password=hashlib.sha512(password).hexdigest()
+	dbcur.execute("UPDATE %s SET %s = '%s' WHERE %s = '%s'"%(db_table, db_password_filed, new_password, db_username_file, in_user))
+	data=db_entry(in_user)
+	if new_passord==data[1]:
+		logging.debug("Password successfully changed for user: %s"%(in_user))
+		out=True
+	else:
+		logging.debug("Could not set new password for user: %s"%(in_user))
 		out=False
 	return out
 def log_result(op, in_user, bool):
@@ -108,7 +124,7 @@ def log_result(op, in_user, bool):
 ########################################################################
 while True:
 	logging.debug("start of infinite loop")
-	try: 
+	try:
 		ejab_request = ejabberd_in()
 	except EjabberdInputError, inst:
 		logging.info("Exception occured: %s", inst)
@@ -124,7 +140,7 @@ while True:
 		ejabberd_out(op_result)
 		log_result(ejab_request[0], ejab_request[1], op_result)
 	elif ejab_request[0] == "setpass":
-		op_result=False
+		op_result = setpass(ejab_request[1], ejab_request[2], ejab_request[3])
 		ejabberd_out(op_result)
 		log_result(ejab_request[0], ejab_request[1], op_result)
 logging.debug("end of infinite loop")
