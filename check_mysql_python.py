@@ -29,7 +29,7 @@ domain_suffix="@exemple.net" #JID= user+domain_suffix
 import sys, logging, struct, hashlib, MySQLdb
 from struct import *
 sys.stderr = open('/var/log/ejabberd/extauth_err.log', 'a')
-logging.basicConfig(level=logging.DEBUG,
+logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(levelname)s %(message)s',
                     filename='/var/log/ejabberd/extauth.log',
                     filemode='a')
@@ -84,7 +84,7 @@ def isuser(in_user, in_host):
 	if data==None:
 		out=False
 		logging.debug("Wrong username: %s"%(in_user))
-	if in_user+"@"+in_host==data[0]+domain_suffix:
+	elif in_user+"@"+in_host==data[0]+domain_suffix:
 		out=True
 	return out
 def auth(in_user, in_host, password):
@@ -93,7 +93,7 @@ def auth(in_user, in_host, password):
 	if data==None:
 		out=False
 		logging.debug("Wrong username: %s"%(in_user))
-	if in_user+"@"+in_host==data[0]+domain_suffix:
+	elif in_user+"@"+in_host==data[0]+domain_suffix:
 		if hashlib.sha512(password).hexdigest()==data[1]:
 			out=True
 		else:
@@ -105,9 +105,9 @@ def auth(in_user, in_host, password):
 def setpass(in_user, in_host, password):
 	out=False
 	new_password=hashlib.sha512(password).hexdigest()
-	dbcur.execute("UPDATE %s SET %s = '%s' WHERE %s = '%s'"%(db_table, db_password_filed, new_password, db_username_file, in_user))
+	dbcur.execute("UPDATE %s SET %s = '%s' WHERE %s = '%s'"%(db_table, db_password_field, new_password, db_username_field, in_user))
 	data=db_entry(in_user)
-	if new_passord==data[1]:
+	if new_password==data[1]:
 		logging.debug("Password successfully changed for user: %s"%(in_user))
 		out=True
 	else:
