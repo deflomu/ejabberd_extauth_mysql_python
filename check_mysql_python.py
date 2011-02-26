@@ -29,7 +29,7 @@ domain_suffix="@exemple.net" #JID= user+domain_suffix
 import sys, logging, struct, hashlib, MySQLdb
 from struct import *
 sys.stderr = open('/var/log/ejabberd/extauth_err.log', 'a')
-logging.basicConfig(level=logging.INFO,
+logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s %(levelname)s %(message)s',
                     filename='/var/log/ejabberd/extauth.log',
                     filemode='a')

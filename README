@@ -1,3 +1,7 @@
 This script is originally from here:
 
 http://tkabber.jabber.ru/files/contributions/check_mysql_python.txt
+
+Requirements:
+
+MySQLdb (install with: easy_install MySQL-python)
