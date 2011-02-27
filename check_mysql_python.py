@@ -10,6 +10,7 @@
 #modifications by elm:
 # - use sha512 instead of md5
 # - allow password changes
+# - allow new users to register
 
 ########################################################################
 #DB Settings
@@ -29,6 +30,7 @@ domain_suffix="@exemple.net" #JID= user+domain_suffix
 import sys, logging, struct, hashlib, MySQLdb
 from struct import *
 sys.stderr = open('/var/log/ejabberd/extauth_err.log', 'a')
+# WARNING: if log level is set to DEBUG, passwords are written to the logfile
 logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s %(levelname)s %(message)s',
                     filename='/var/log/ejabberd/extauth.log',
@@ -78,6 +80,12 @@ def db_entry(in_user):
 	ls=[None, None]
 	dbcur.execute("SELECT %s,%s FROM %s WHERE %s ='%s'"%(db_username_field,db_password_field , db_table, db_username_field, in_user))
 	return dbcur.fetchone()
+def db_updatepassword(in_user, password):
+	dbcur.execute("UPDATE %s SET %s = '%s' WHERE %s = '%s'"%(db_table, db_password_field, password, db_username_field, in_user))
+def db_insertuser(in_user, password):
+	decur.execute("INSERT INTO %s (%s,%s) VALUES ('%s','%s')"%(db_table, db_username_field, db_password_field, in_user, password))
+def db_removeentry(in_user):
+	decure.execute("DELETE FROM %s WHERE %s='%s'"%(db_table, db_username_field, in_user))
 def isuser(in_user, in_host):
 	data=db_entry(in_user)
 	out=False #defaut to O preventing mistake
@@ -102,10 +110,10 @@ def auth(in_user, in_host, password):
 	else:
 		out=False
 	return out
-def setpass(in_user, in_host, password):
+def setpass(in_user, in_host, in_password):
 	out=False
-	new_password=hashlib.sha512(password).hexdigest()
-	dbcur.execute("UPDATE %s SET %s = '%s' WHERE %s = '%s'"%(db_table, db_password_field, new_password, db_username_field, in_user))
+	new_password=hashlib.sha512(in_password).hexdigest()
+	db_updatepassword(in_user, new_password)
 	data=db_entry(in_user)
 	if new_password==data[1]:
 		logging.debug("Password successfully changed for user: %s"%(in_user))
@@ -113,6 +121,44 @@ def setpass(in_user, in_host, password):
 	else:
 		logging.debug("Could not set new password for user: %s"%(in_user))
 		out=False
+	return out
+def tryregister(in_user, in_host, in_password):
+	out=False
+	data=db_entry(in_user)
+	if data==None:
+		password=hashlib.sha512(in_password).hexdigest()
+		db_insertuser(in_user, password)
+		data=db_entry(in_user)
+		if data==Null:
+			out=False
+			logging.debug("Could not register user: %s"%(in_user))
+		else:
+			out=True
+			logging.debug("User successfully registered: %s"%(in_user))
+	else:
+		out=False
+		logging.debug("User already exists: %s"%(in_user))
+	return out
+def removeuser(in_user, in_host):
+	out=False
+	data=db_entry(in_user)
+	if data==None:
+		out=False
+		logging.debug("User does not exists: %s"%(in_user))
+	else:
+		db_removeuser(in_user)
+		data=db_entry(in_user)
+		if data==Null:
+			out=True
+			logging.debug("User deleted: %s"%(in_user))
+		else:
+			out=False
+			logging.debug("User could not be deleted: %s"%(in_user))
+	return out
+def removeuser3(in_user, in_host, in_password):
+	out=False
+	if auth(in_user, in_host, in_password)==True:
+		out=removeuser(in_user, in_host)
 	return out
 def log_result(op, in_user, bool):
 	if bool:
@@ -141,6 +187,18 @@ while True:
 		log_result(ejab_request[0], ejab_request[1], op_result)
 	elif ejab_request[0] == "setpass":
 		op_result = setpass(ejab_request[1], ejab_request[2], ejab_request[3])
+		ejabberd_out(op_result)
+		log_result(ejab_request[0], ejab_request[1], op_result)
+	elif ejab_request[0] == "tryregister":
+		op_result = tryregister(ejab_request[1], ejab_request[2], ejab_request[3])
+		ejabberd_out(op_result)
+		log_result(ejab_request[0], ejab_request[1], op_result)
+	elif ejab_request[0] == "removeuser":
+		op_result = removeuser(ejab_request[1], ejab_request[2])
+		ejabberd_out(op_result)
+		log_result(ejab_request[0], ejab_request[1], op_result)
+	elif ejab_request[0] == "removeuser3":
+		op_result = removeuser3(ejab_request[1], ejab_request[2], ejab_request[3])
 		ejabberd_out(op_result)
 		log_result(ejab_request[0], ejab_request[1], op_result)
 logging.debug("end of infinite loop")
