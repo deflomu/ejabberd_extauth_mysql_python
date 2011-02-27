@@ -5,3 +5,11 @@ http://tkabber.jabber.ru/files/contributions/check_mysql_python.txt
 Requirements:
 
 MySQLdb (install with: easy_install MySQL-python)
+
+Things changed by elm:
+ - use sha512 instead of md5
+ - allow password changes
+ - allow new users to register
+ - users can be deleted
+
+This script now supports all actions that can be implemented by an extauth script.

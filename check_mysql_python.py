@@ -11,6 +11,7 @@
 # - use sha512 instead of md5
 # - allow password changes
 # - allow new users to register
+# - users can be deleted
 
 ########################################################################
 #DB Settings
