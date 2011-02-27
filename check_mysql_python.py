@@ -83,9 +83,9 @@ def db_entry(in_user):
 def db_updatepassword(in_user, password):
 	dbcur.execute("UPDATE %s SET %s = '%s' WHERE %s = '%s'"%(db_table, db_password_field, password, db_username_field, in_user))
 def db_insertuser(in_user, password):
-	decur.execute("INSERT INTO %s (%s,%s) VALUES ('%s','%s')"%(db_table, db_username_field, db_password_field, in_user, password))
+	dbcur.execute("INSERT INTO %s (%s,%s) VALUES ('%s','%s')"%(db_table, db_username_field, db_password_field, in_user, password))
 def db_removeentry(in_user):
-	decure.execute("DELETE FROM %s WHERE %s='%s'"%(db_table, db_username_field, in_user))
+	dbcur.execute("DELETE FROM %s WHERE %s='%s'"%(db_table, db_username_field, in_user))
 def isuser(in_user, in_host):
 	data=db_entry(in_user)
 	out=False #defaut to O preventing mistake
@@ -146,7 +146,7 @@ def removeuser(in_user, in_host):
 		out=False
 		logging.debug("User does not exists: %s"%(in_user))
 	else:
-		db_removeuser(in_user)
+		db_removeentry(in_user)
 		data=db_entry(in_user)
 		if data==Null:
 			out=True
