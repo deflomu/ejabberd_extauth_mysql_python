@@ -11,5 +11,6 @@ Things changed by elm:
  - allow password changes
  - allow new users to register
  - users can be deleted
+ - only connect to the database if a command is issued
 
 This script now supports all actions that can be implemented by an extauth script.
